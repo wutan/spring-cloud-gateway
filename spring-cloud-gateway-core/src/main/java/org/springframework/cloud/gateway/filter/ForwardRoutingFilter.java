@@ -15,11 +15,15 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.isAlreadyRouted;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.setAlreadyRouted;
 
+/**
+ *   根据 forward:// 前缀( Scheme )过滤处理，将请求转发到当前网关实例本地接口
+ */
 public class ForwardRoutingFilter implements GlobalFilter, Ordered {
 
 	private static final Log log = LogFactory.getLog(ForwardRoutingFilter.class);
 
 	private final ObjectProvider<DispatcherHandler> dispatcherHandlerProvider;
+
 	//do not use this dispatcherHandler directly, use getDispatcherHandler() instead.
 	private volatile DispatcherHandler dispatcherHandler;
 
@@ -44,10 +48,13 @@ public class ForwardRoutingFilter implements GlobalFilter, Ordered {
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 		URI requestUrl = exchange.getRequiredAttribute(GATEWAY_REQUEST_URL_ATTR);
 
+		// 判断有 forward:// 前缀( Scheme )，过滤处理，将请求转发给 DispatcherHandler
 		String scheme = requestUrl.getScheme();
 		if (isAlreadyRouted(exchange) || !"forward".equals(scheme)) {
 			return chain.filter(exchange);
 		}
+
+
 		setAlreadyRouted(exchange);
 
 		//TODO: translate url?
@@ -56,6 +63,7 @@ public class ForwardRoutingFilter implements GlobalFilter, Ordered {
 			log.trace("Forwarding to URI: "+requestUrl);
 		}
 
+		//  DispatcherHandler 匹配并转发到当前网关实例本地接口
 		return this.getDispatcherHandler().handle(exchange);
 	}
 }

@@ -9,6 +9,12 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @AutoConfigureBefore(GatewayAutoConfiguration.class)
+
+/**
+ * 用于检查项目是否正确导入 spring-boot-starter-webflux 依赖，
+ *     而不是错误导入 spring-boot-starter-web 依赖
+ */
+
 public class GatewayClassPathWarningAutoConfiguration {
 
 	private static final Log log = LogFactory.getLog(GatewayClassPathWarningAutoConfiguration.class);

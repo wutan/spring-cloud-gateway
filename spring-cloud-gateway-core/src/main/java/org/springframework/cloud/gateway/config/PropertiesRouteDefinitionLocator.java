@@ -24,6 +24,8 @@ import reactor.core.publisher.Flux;
 
 /**
  * @author Spencer Gibb
+ *
+ * 从配置文件( 例如，YML / Properties 等 ) 读取路由配置
  */
 public class PropertiesRouteDefinitionLocator implements RouteDefinitionLocator {
 

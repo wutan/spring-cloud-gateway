@@ -60,6 +60,7 @@ public class NettyWriteResponseFilter implements GlobalFilter, Ordered {
 		// NOTICE: nothing in "pre" filter stage as CLIENT_RESPONSE_ATTR is not added
 		// until the WebHandler is run
 		return chain.filter(exchange).then(Mono.defer(() -> {
+			// 获取Response
 			HttpClientResponse clientResponse = exchange.getAttribute(CLIENT_RESPONSE_ATTR);
 
 			if (clientResponse == null) {
@@ -68,6 +69,7 @@ public class NettyWriteResponseFilter implements GlobalFilter, Ordered {
 			log.trace("NettyWriteResponseFilter start");
 			ServerHttpResponse response = exchange.getResponse();
 
+			// 将Netty Response写回客户端
 			NettyDataBufferFactory factory = (NettyDataBufferFactory) response.bufferFactory();
 			//TODO: what if it's not netty
 
@@ -78,9 +80,12 @@ public class NettyWriteResponseFilter implements GlobalFilter, Ordered {
 			MediaType contentType = null;
 			try {
 				contentType = response.getHeaders().getContentType();
+
 			} catch (Exception e) {
 				log.trace("invalid media type", e);
 			}
+
+
 			return (isStreamingMediaType(contentType) ?
 					response.writeAndFlushWith(body.map(Flux::just)) : response.writeWith(body));
 		}));

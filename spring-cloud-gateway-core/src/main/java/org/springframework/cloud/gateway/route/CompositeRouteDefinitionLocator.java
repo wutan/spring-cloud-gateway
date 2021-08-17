@@ -21,7 +21,10 @@ import reactor.core.publisher.Flux;
 
 /**
  * @author Spencer Gibb
+ *
+ * 组合多种 RouteDefinitionLocator 的实现，为 RouteDefinitionRouteLocator 提供统一入口
  */
+
 public class CompositeRouteDefinitionLocator implements RouteDefinitionLocator {
 
 	private final Flux<RouteDefinitionLocator> delegates;
@@ -32,6 +35,7 @@ public class CompositeRouteDefinitionLocator implements RouteDefinitionLocator {
 
 	@Override
 	public Flux<RouteDefinition> getRouteDefinitions() {
+		// *****   提供统一方法，将组合的 delegates 的路由定义全部返回
 		return this.delegates.flatMap(RouteDefinitionLocator::getRouteDefinitions);
 	}
 }

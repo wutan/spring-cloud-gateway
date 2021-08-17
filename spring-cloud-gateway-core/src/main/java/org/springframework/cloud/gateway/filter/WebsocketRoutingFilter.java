@@ -31,7 +31,12 @@ import static org.springframework.util.StringUtils.commaDelimitedListToStringArr
 
 /**
  * @author Spencer Gibb
+ *
+ * Websocket 路由网关过滤器。
+ *
+ * 其根据 ws:// / wss:// 前缀( Scheme )过滤处理，代理后端 Websocket 服务，提供给客户端连接
  */
+
 public class WebsocketRoutingFilter implements GlobalFilter, Ordered {
 	private static final Log log = LogFactory.getLog(WebsocketRoutingFilter.class);
 	public static final String SEC_WEBSOCKET_PROTOCOL = "Sec-WebSocket-Protocol";
@@ -66,6 +71,8 @@ public class WebsocketRoutingFilter implements GlobalFilter, Ordered {
 		if (isAlreadyRouted(exchange) || (!"ws".equals(scheme) && !"wss".equals(scheme))) {
 			return chain.filter(exchange);
 		}
+
+
 		setAlreadyRouted(exchange);
 
 

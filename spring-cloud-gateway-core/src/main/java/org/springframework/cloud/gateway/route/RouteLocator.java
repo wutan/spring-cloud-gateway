@@ -23,6 +23,11 @@ import reactor.core.publisher.Flux;
  * @author Spencer Gibb
  */
 //TODO: rename to Routes?
+
+
+/**
+ *   Route 的定位器或者说探测器，是用来获取 Route 信息的
+  */
 public interface RouteLocator {
 
 	Flux<Route> getRoutes();

@@ -35,20 +35,26 @@ import org.springframework.validation.annotation.Validated;
 /**
  * @author Spencer Gibb
  */
+
+// 外部化配置类
 @ConfigurationProperties("spring.cloud.gateway")
 @Validated
 public class GatewayProperties {
 
 	private final Log logger = LogFactory.getLog(getClass());
+
+
 	/**
-	 * List of Routes
+	 *   routes 属性，路由配置。通过 spring.cloud.gateway.routes 配置。以 YAML 配置文件举例子
 	 */
 	@NotNull
 	@Valid
 	private List<RouteDefinition> routes = new ArrayList<>();
 
+
 	/**
 	 * List of filter definitions that are applied to every route.
+	 *        默认过滤器配置。通过 spring.cloud.gateway.default-filters 配置。以 YAML 配置文件举例子
 	 */
 	private List<FilterDefinition> defaultFilters = new ArrayList<>();
 

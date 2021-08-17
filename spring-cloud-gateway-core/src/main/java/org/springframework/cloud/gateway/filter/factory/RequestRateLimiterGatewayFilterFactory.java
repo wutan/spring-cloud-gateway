@@ -32,6 +32,10 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.s
 
 /**
  * User Request Rate Limiter filter. See https://stripe.com/blog/rate-limiters and
+ *
+ *
+ * 请求限流网关过滤器工厂类
+ *      使用 Redis + Lua 实现分布式限流。而限流的粒度，例如 URL / 用户 / IP 等
  */
 @ConfigurationProperties("spring.cloud.gateway.filter.request-rate-limiter")
 public class RequestRateLimiterGatewayFilterFactory extends AbstractGatewayFilterFactory<RequestRateLimiterGatewayFilterFactory.Config> {
@@ -39,7 +43,10 @@ public class RequestRateLimiterGatewayFilterFactory extends AbstractGatewayFilte
 	public static final String KEY_RESOLVER_KEY = "keyResolver";
 	private static final String EMPTY_KEY = "____EMPTY_KEY__";
 
+	// 限流器
 	private final RateLimiter defaultRateLimiter;
+
+	// 限流键解析器
 	private final KeyResolver defaultKeyResolver;
 
 	/** Switch to deny requests if the Key Resolver returns an empty key, defaults to true. */
@@ -82,33 +89,45 @@ public class RequestRateLimiterGatewayFilterFactory extends AbstractGatewayFilte
 	@SuppressWarnings("unchecked")
 	@Override
 	public GatewayFilter apply(Config config) {
+		// 获得 KeyResolver
 		KeyResolver resolver = getOrDefault(config.keyResolver, defaultKeyResolver);
+
 		RateLimiter<Object> limiter = getOrDefault(config.rateLimiter, defaultRateLimiter);
 		boolean denyEmpty = getOrDefault(config.denyEmptyKey, this.denyEmptyKey);
+
 		HttpStatusHolder emptyKeyStatus = HttpStatusHolder.parse(getOrDefault(config.emptyKeyStatus, this.emptyKeyStatusCode));
 
 		return (exchange, chain) -> {
 			Route route = exchange.getAttribute(ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR);
 
 			return resolver.resolve(exchange).defaultIfEmpty(EMPTY_KEY).flatMap(key -> {
+
 				if (EMPTY_KEY.equals(key)) {
 					if (denyEmpty) {
 						setResponseStatus(exchange, emptyKeyStatus);
+
+						// 不会请求后端 Http / Websocket 服务，并且最终返回客户端 200 状态码，内容为空
 						return exchange.getResponse().setComplete();
 					}
 					return chain.filter(exchange);
 				}
+
+
 				return limiter.isAllowed(route.getId(), key).flatMap(response -> {
 
 					for (Map.Entry<String, String> header : response.getHeaders().entrySet()) {
 						exchange.getResponse().getHeaders().add(header.getKey(), header.getValue());
 					}
 
+					//  允许访问
 					if (response.isAllowed()) {
 						return chain.filter(exchange);
 					}
 
+					// 被限流，不允许访问
 					setResponseStatus(exchange, config.getStatusCode());
+
+					// 不允许访问，设置响应 429 状态码，并回写客户端响应
 					return exchange.getResponse().setComplete();
 				});
 			});

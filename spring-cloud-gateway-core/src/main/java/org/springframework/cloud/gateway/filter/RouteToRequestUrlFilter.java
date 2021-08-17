@@ -56,6 +56,8 @@ public class RouteToRequestUrlFilter implements GlobalFilter, Ordered {
 		if (route == null) {
 			return chain.filter(exchange);
 		}
+
+
 		log.trace("RouteToRequestUrlFilter start");
 		URI uri = exchange.getRequest().getURI();
 		boolean encoded = containsEncodedParts(uri);

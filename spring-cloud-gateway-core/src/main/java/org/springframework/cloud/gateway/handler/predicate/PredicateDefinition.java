@@ -31,16 +31,34 @@ import static org.springframework.util.StringUtils.tokenizeToStringArray;
 
 /**
  * @author Spencer Gibb
+ *
+ * 谓语定义
  */
+
 @Validated
 public class PredicateDefinition {
+	/**
+	 * 通过 name 对应到 org.springframework.cloud.gateway.handler.predicate.RoutePredicateFactory 的实现类。
+	 *       例如说，name=Query 对应到 QueryRoutePredicateFactory
+	 */
 	@NotNull
-	private String name;
-	private Map<String, String> args = new LinkedHashMap<>();
+	private String name;   // 谓语定义名字
+
+	/**
+	 * 例如，name=Host / args={"_genkey_0" : "iocoder.cn"} ，匹配请求的 hostname 为 iocoder.cn
+	 */
+	private Map<String, String> args = new LinkedHashMap<>();  // 参数数组
 
 	public PredicateDefinition() {
 	}
 
+
+	/**
+	 * 根据 text 创建 PredicateDefinition
+	 *
+	 * @param text 格式 ${name}=${args[0]},${args[1]}...${args[n]}
+	 *             例如 Host=iocoder.cn
+	 */
 	public PredicateDefinition(String text) {
 		int eqIdx = text.indexOf('=');
 		if (eqIdx <= 0) {

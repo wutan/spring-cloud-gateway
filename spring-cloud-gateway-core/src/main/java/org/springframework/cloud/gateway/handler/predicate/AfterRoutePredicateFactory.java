@@ -29,6 +29,7 @@ import static org.springframework.cloud.gateway.handler.predicate.BetweenRoutePr
 /**
  * @author Spencer Gibb
  */
+
 public class AfterRoutePredicateFactory extends AbstractRoutePredicateFactory<AfterRoutePredicateFactory.Config> {
 
 	public static final String DATETIME_KEY = "datetime";

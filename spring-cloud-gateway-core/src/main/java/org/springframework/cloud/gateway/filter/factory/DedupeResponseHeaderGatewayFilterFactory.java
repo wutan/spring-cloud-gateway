@@ -64,6 +64,7 @@ Modified response header Access-Control-Allow-Credentials: true
 
 /**
  * @author Vitaliy Pavlyuk
+ *
  */
 public class DedupeResponseHeaderGatewayFilterFactory
         extends AbstractGatewayFilterFactory<DedupeResponseHeaderGatewayFilterFactory.Config> {

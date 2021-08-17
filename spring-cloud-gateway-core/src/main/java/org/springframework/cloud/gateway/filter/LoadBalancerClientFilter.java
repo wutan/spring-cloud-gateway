@@ -57,16 +57,22 @@ public class LoadBalancerClientFilter implements GlobalFilter, Ordered {
 	@Override
 	@SuppressWarnings("Duplicates")
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+		// 获取URL
 		URI url = exchange.getAttribute(GATEWAY_REQUEST_URL_ATTR);
+
+		// 只处理 lb:// 为前缀( Scheme )的地址
 		String schemePrefix = exchange.getAttribute(GATEWAY_SCHEME_PREFIX_ATTR);
 		if (url == null || (!"lb".equals(url.getScheme()) && !"lb".equals(schemePrefix))) {
 			return chain.filter(exchange);
 		}
+
 		//preserve the original url
+		// 添加 原始请求URI 到 GATEWAY_ORIGINAL_REQUEST_URL_ATTR
 		addOriginalRequestUrl(exchange, url);
 
 		log.trace("LoadBalancerClientFilter url before: " + url);
 
+		 // 获取 服务实例
 		final ServiceInstance instance = choose(exchange);
 
 		if (instance == null) {
@@ -82,6 +88,7 @@ public class LoadBalancerClientFilter implements GlobalFilter, Ordered {
 			overrideScheme = url.getScheme();
 		}
 
+		// 添加 请求URI 到 GATEWAY_REQUEST_URL_ATTR
 		URI requestUrl = loadBalancer.reconstructURI(new DelegatingServiceInstance(instance, overrideScheme), uri);
 
 		log.trace("LoadBalancerClientFilter url chosen: " + requestUrl);

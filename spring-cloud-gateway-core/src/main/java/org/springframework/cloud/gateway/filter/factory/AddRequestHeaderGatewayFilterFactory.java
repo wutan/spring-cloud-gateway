@@ -27,11 +27,14 @@ public class AddRequestHeaderGatewayFilterFactory extends AbstractNameValueGatew
 
 	@Override
 	public GatewayFilter apply(NameValueConfig config) {
+
+		//  // 创建新的 ServerHttpRequest
 		return (exchange, chain) -> {
 			ServerHttpRequest request = exchange.getRequest().mutate()
 					.header(config.getName(), config.getValue())
 					.build();
 
+			// 创建新的 ServerWebExchange ，提交过滤器链继续过滤
 			return chain.filter(exchange.mutate().request(request).build());
 		};
     }

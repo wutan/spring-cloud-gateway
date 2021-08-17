@@ -29,6 +29,8 @@ import reactor.core.publisher.Mono;
  *
  * @author Rossen Stoyanchev
  * @since 5.0
+ *
+ *   全局过滤器接口  ---    GlobalFilter 会作用到所有的 Route 上
  */
 public interface GlobalFilter {
 

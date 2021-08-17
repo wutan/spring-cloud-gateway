@@ -21,6 +21,7 @@ import org.springframework.context.ApplicationEvent;
 
 /**
  * @author Spencer Gibb
+ *      RefreshRoutesEvent 事件定义
  */
 public class RefreshRoutesEvent extends ApplicationEvent {
 

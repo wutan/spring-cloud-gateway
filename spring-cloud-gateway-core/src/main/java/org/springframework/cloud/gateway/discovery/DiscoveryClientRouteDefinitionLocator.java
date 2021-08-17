@@ -38,11 +38,16 @@ import org.springframework.util.StringUtils;
 /**
  * TODO: change to RouteLocator? use java dsl
  * @author Spencer Gibb
+ *
+ * 从注册中心( 例如，Eureka / Consul / Zookeeper / Etcd 等 )读取
+ *
+ *     通过调用 DiscoveryClient 获取注册在注册中心的服务列表，生成对应的 RouteDefinition 数组。
  */
 public class DiscoveryClientRouteDefinitionLocator implements RouteDefinitionLocator {
 
 	private final DiscoveryClient discoveryClient;
 	private final DiscoveryLocatorProperties properties;
+
 	private final String routeIdPrefix;
 	private final SimpleEvaluationContext evalCtxt;
 
@@ -89,8 +94,8 @@ public class DiscoveryClientRouteDefinitionLocator implements RouteDefinitionLoc
 					String serviceId = instance.getServiceId();
 
                     RouteDefinition routeDefinition = new RouteDefinition();
-                    routeDefinition.setId(this.routeIdPrefix + serviceId);
-					String uri = urlExpr.getValue(evalCtxt, instance, String.class);
+                    routeDefinition.setId(this.routeIdPrefix + serviceId);  // // 设置 ID
+					String uri = urlExpr.getValue(evalCtxt, instance, String.class);  // // 设置 URI
 					routeDefinition.setUri(URI.create(uri));
 
 					final ServiceInstance instanceForEval = new DelegatingServiceInstance(instance, properties);
@@ -102,7 +107,7 @@ public class DiscoveryClientRouteDefinitionLocator implements RouteDefinitionLoc
 							String value = getValueFromExpr(evalCtxt, parser, instanceForEval, entry);
 							predicate.addArg(entry.getKey(), value);
 						}
-						routeDefinition.getPredicates().add(predicate);
+						routeDefinition.getPredicates().add(predicate);  // 添加 Path 匹配断言
 					}
 
                     for (FilterDefinition original : this.properties.getFilters()) {
@@ -112,7 +117,7 @@ public class DiscoveryClientRouteDefinitionLocator implements RouteDefinitionLoc
 							String value = getValueFromExpr(evalCtxt, parser, instanceForEval, entry);
 							filter.addArg(entry.getKey(), value);
 						}
-						routeDefinition.getFilters().add(filter);
+						routeDefinition.getFilters().add(filter);  // 添加 Path 重写过滤器
 					}
 
                     return routeDefinition;

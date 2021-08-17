@@ -57,12 +57,19 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.s
 /**
  * @author Spencer Gibb
  * @author Biju Kunjummen
+ *
+ * Netty 路由网关过滤器。其根据 http:// 或 https:// 前缀( Scheme )过滤处理，
+ * 使用基于 Netty 实现的 HttpClient 请求后端 Http 服务。
  */
+
 public class NettyRoutingFilter implements GlobalFilter, Ordered {
 
+	//  通过该属性，请求后端的 Http 服务
 	private final HttpClient httpClient;
+
 	private final ObjectProvider<List<HttpHeadersFilter>> headersFiltersProvider;
 	private final HttpClientProperties properties;
+
 	//do not use this headersFilters directly, use getHeadersFilters() instead.
 	private volatile List<HttpHeadersFilter> headersFilters;
 
@@ -94,15 +101,18 @@ public class NettyRoutingFilter implements GlobalFilter, Ordered {
 		if (isAlreadyRouted(exchange) || (!"http".equals(scheme) && !"https".equals(scheme))) {
 			return chain.filter(exchange);
 		}
+
+
 		setAlreadyRouted(exchange);
 
 		ServerHttpRequest request = exchange.getRequest();
 
 		final HttpMethod method = HttpMethod.valueOf(request.getMethodValue());
-		final String url = requestUrl.toString();
+		final String url = requestUrl.toString();   // 获取URL
 
 		HttpHeaders filtered = filterRequest(getHeadersFilters(), exchange);
 
+		// Request Header
 		final DefaultHttpHeaders httpHeaders = new DefaultHttpHeaders();
 		filtered.forEach(httpHeaders::set);
 
@@ -111,6 +121,8 @@ public class NettyRoutingFilter implements GlobalFilter, Ordered {
 
 		boolean preserveHost = exchange.getAttributeOrDefault(PRESERVE_HOST_HEADER_ATTRIBUTE, false);
 
+
+		// 请求
 		Mono<HttpClientResponse> responseMono = this.httpClient.request(method, url, req -> {
 			final HttpClientRequest proxyRequest = req.options(NettyPipeline.SendOptions::flushOnEach)
 					.headers(httpHeaders)
@@ -128,6 +140,7 @@ public class NettyRoutingFilter implements GlobalFilter, Ordered {
 						new ReadTimeoutHandler(properties.getResponseTimeout().toMillis(), TimeUnit.MILLISECONDS)));
 			}
 
+			// Request Body
 			return proxyRequest.sendHeaders() //I shouldn't need this
 					.send(request.getBody().map(dataBuffer ->
 							((NettyDataBuffer) dataBuffer).getNativeBuffer()));
@@ -135,6 +148,7 @@ public class NettyRoutingFilter implements GlobalFilter, Ordered {
 
 		return responseMono.doOnNext(res -> {
 			ServerHttpResponse response = exchange.getResponse();
+
 			// put headers and status so filters can modify the response
 			HttpHeaders headers = new HttpHeaders();
 
@@ -168,6 +182,7 @@ public class NettyRoutingFilter implements GlobalFilter, Ordered {
 				.onErrorMap(t -> properties.getResponseTimeout() != null && t instanceof ReadTimeoutException,
 						t -> new TimeoutException("Response took longer than timeout: " +
 								properties.getResponseTimeout()))
+
 				.then(chain.filter(exchange));
 	}
 

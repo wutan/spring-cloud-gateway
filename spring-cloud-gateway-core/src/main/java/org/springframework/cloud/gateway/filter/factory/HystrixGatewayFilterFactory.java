@@ -56,6 +56,7 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.c
  * @author Spencer Gibb
  * @author Michele Mancioppi
  * @author Olga Maciaszek-Sharma
+ *
  */
 public class HystrixGatewayFilterFactory extends AbstractGatewayFilterFactory<HystrixGatewayFilterFactory.Config> {
 
@@ -99,8 +100,10 @@ public class HystrixGatewayFilterFactory extends AbstractGatewayFilterFactory<Hy
 	@Override
 	public GatewayFilter apply(Config config) {
 		//TODO: if no name is supplied, generate one from command id (useful for default filter)
+
 		if (config.setter == null) {
 			Assert.notNull(config.name, "A name must be supplied for the Hystrix Command Key");
+
 			HystrixCommandGroupKey groupKey = HystrixCommandGroupKey.Factory.asKey(getClass().getSimpleName());
 			HystrixCommandKey commandKey = HystrixCommandKey.Factory.asKey(config.name);
 
@@ -112,8 +115,13 @@ public class HystrixGatewayFilterFactory extends AbstractGatewayFilterFactory<Hy
 			RouteHystrixCommand command = new RouteHystrixCommand(config.setter, config.fallbackUri, exchange, chain);
 
 			return Mono.create(s -> {
+
+				// 使用 Hystrix Command Observable 订阅
 				Subscription sub = command.toObservable().subscribe(s::success, s::error, s::success);
+
+				// Mono 取消时，取消 Hystrix Command Observable 的订阅，结束 Hystrix Command 的执行
 				s.onCancel(sub::unsubscribe);
+
 			}).onErrorResume((Function<Throwable, Mono<Void>>) throwable -> {
 				if (throwable instanceof HystrixRuntimeException) {
 					HystrixRuntimeException e = (HystrixRuntimeException) throwable;

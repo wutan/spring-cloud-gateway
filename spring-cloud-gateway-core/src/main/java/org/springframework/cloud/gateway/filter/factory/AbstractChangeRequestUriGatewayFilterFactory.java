@@ -33,6 +33,7 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
  * {@link #determineRequestUri(ServerWebExchange, T)} logic.
  *
  * @author Toshiaki Maki
+ *
  */
 public abstract class AbstractChangeRequestUriGatewayFilterFactory<T>
 		extends AbstractGatewayFilterFactory<T> {
@@ -53,10 +54,12 @@ public abstract class AbstractChangeRequestUriGatewayFilterFactory<T>
 	public GatewayFilter apply(T config) {
 		return new OrderedGatewayFilter((exchange, chain) -> {
 			Optional<URI> uri = this.determineRequestUri(exchange, config);
+
 			uri.ifPresent(u -> {
 				Map<String, Object> attributes = exchange.getAttributes();
 				attributes.put(GATEWAY_REQUEST_URL_ATTR, u);
 			});
+
 			return chain.filter(exchange);
 		}, this.order);
 	}

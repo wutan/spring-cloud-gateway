@@ -9,7 +9,10 @@ import reactor.core.publisher.Mono;
  *
  * @author Rossen Stoyanchev
  * @since 5.0
+ *
+ *      网关过滤器链
  */
+
 public interface GatewayFilterChain {
 
 	/**

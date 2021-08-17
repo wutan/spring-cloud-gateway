@@ -61,6 +61,7 @@ public class WebClientHttpRoutingFilter implements GlobalFilter, Ordered {
 		if (isAlreadyRouted(exchange) || (!"http".equals(scheme) && !"https".equals(scheme))) {
 			return chain.filter(exchange);
 		}
+
 		setAlreadyRouted(exchange);
 
 		ServerHttpRequest request = exchange.getRequest();

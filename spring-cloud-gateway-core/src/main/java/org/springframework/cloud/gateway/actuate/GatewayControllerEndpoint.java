@@ -51,6 +51,7 @@ import reactor.core.publisher.Mono;
 
 /**
  * @author Spencer Gibb
+ *
  */
 @RestControllerEndpoint(id = "gateway")
 public class GatewayControllerEndpoint implements ApplicationEventPublisherAware {

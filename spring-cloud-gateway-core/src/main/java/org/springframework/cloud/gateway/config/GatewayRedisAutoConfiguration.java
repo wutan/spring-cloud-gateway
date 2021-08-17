@@ -26,10 +26,17 @@ import org.springframework.validation.Validator;
 import org.springframework.web.reactive.DispatcherHandler;
 
 @Configuration
+
 @AutoConfigureAfter(RedisReactiveAutoConfiguration.class)
 @AutoConfigureBefore(GatewayAutoConfiguration.class)
+
 @ConditionalOnBean(ReactiveRedisTemplate.class)
 @ConditionalOnClass({RedisTemplate.class, DispatcherHandler.class})
+
+
+/**
+ *  初始化 RedisRateLimiter
+ */
 class GatewayRedisAutoConfiguration {
 
 	@Bean
@@ -45,6 +52,7 @@ class GatewayRedisAutoConfiguration {
 	//TODO: replace with ReactiveStringRedisTemplate in future
 	public ReactiveRedisTemplate<String, String> stringReactiveRedisTemplate(
 			ReactiveRedisConnectionFactory reactiveRedisConnectionFactory) {
+
 		RedisSerializer<String> serializer = new StringRedisSerializer();
 		RedisSerializationContext<String , String> serializationContext = RedisSerializationContext
 				.<String, String>newSerializationContext()
@@ -53,6 +61,7 @@ class GatewayRedisAutoConfiguration {
 				.hashKey(serializer)
 				.hashValue(serializer)
 				.build();
+
 		return new ReactiveRedisTemplate<>(reactiveRedisConnectionFactory,
 				serializationContext);
 	}
@@ -62,6 +71,7 @@ class GatewayRedisAutoConfiguration {
 	public RedisRateLimiter redisRateLimiter(ReactiveRedisTemplate<String, String> redisTemplate,
 											 @Qualifier(RedisRateLimiter.REDIS_SCRIPT_NAME) RedisScript<List<Long>> redisScript,
 											 Validator validator) {
+
 		return new RedisRateLimiter(redisTemplate, redisScript, validator);
 	}
 }

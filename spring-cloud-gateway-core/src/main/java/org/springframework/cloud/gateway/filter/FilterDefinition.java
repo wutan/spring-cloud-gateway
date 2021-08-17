@@ -30,16 +30,29 @@ import static org.springframework.util.StringUtils.tokenizeToStringArray;
 
 /**
  * @author Spencer Gibb
+ *
  */
+
 @Validated
 public class FilterDefinition {
+	/**
+	 *     通过 name 对应到 org.springframework.cloud.gateway.filter.factory.GatewayFilterFactory 的实现类
+	 *         例如说，name=AddRequestParameter 对应到 AddRequestParameterGatewayFilterFactory
+	 */
 	@NotNull
-	private String name;
-	private Map<String, String> args = new LinkedHashMap<>();
+	private String name;   //过滤器定义名字
+	private Map<String, String> args = new LinkedHashMap<>();  //参数数组
 
 	public FilterDefinition() {
 	}
 
+
+	/**
+	 * 根据 text 创建 FilterDefinition
+	 *
+	 * @param text 格式 ${name}=${args[0]},${args[1]}...${args[n]}
+	 *             例如 AddRequestParameter=foo, bar
+	 */
 	public FilterDefinition(String text) {
 		int eqIdx = text.indexOf('=');
 		if (eqIdx <= 0) {

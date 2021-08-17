@@ -35,7 +35,10 @@ import static org.springframework.util.StringUtils.tokenizeToStringArray;
 
 /**
  * @author Spencer Gibb
+ *
+ * 路由定义
  */
+
 @Validated
 public class RouteDefinition {
 	@NotEmpty
@@ -43,18 +46,25 @@ public class RouteDefinition {
 
 	@NotEmpty
 	@Valid
-	private List<PredicateDefinition> predicates = new ArrayList<>();
+	private List<PredicateDefinition> predicates = new ArrayList<>();  // 谓语定义数组
 
 	@Valid
-	private List<FilterDefinition> filters = new ArrayList<>();
+	private List<FilterDefinition> filters = new ArrayList<>();  // 过滤器定义数组
 
 	@NotNull
-	private URI uri;
+	private URI uri;  //  路由目的URI
 
-	private int order = 0;
+	private int order = 0;  //  路由顺序, 当请求匹配到多个路由时，使用顺序小的
 
 	public RouteDefinition() {}
 
+
+	/**
+	 * 根据 text 创建 RouteDefinition
+	 *
+	 * @param text 格式 ${id}=${uri},${predicates[0]},${predicates[1]}...${predicates[n]}
+	 *             例如 route001=http://127.0.0.1,Host=**.addrequestparameter.org,Path=/get
+	 */
 	public RouteDefinition(String text) {
 		int eqIdx = text.indexOf('=');
 		if (eqIdx <= 0) {
@@ -62,10 +72,13 @@ public class RouteDefinition {
 					", must be of the form name=value");
 		}
 
+		// id
 		setId(text.substring(0, eqIdx));
 
+		// predicates
 		String[] args = tokenizeToStringArray(text.substring(eqIdx+1), ",");
 
+		// uri
 		setUri(URI.create(args[0]));
 
 		for (int i=1; i < args.length; i++) {

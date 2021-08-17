@@ -30,11 +30,17 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 /**
  * @author Spencer Gibb
+ *   缓存路由的 RouteLocator 实现类
  */
 public class CachingRouteLocator implements RouteLocator {
 
 	private final RouteLocator delegate;
+
 	private final Flux<Route> routes;
+
+	/**
+	 * 路由缓存
+	 */
 	private final Map<String, List> cache = new HashMap<>();
 
 	public CachingRouteLocator(RouteLocator delegate) {

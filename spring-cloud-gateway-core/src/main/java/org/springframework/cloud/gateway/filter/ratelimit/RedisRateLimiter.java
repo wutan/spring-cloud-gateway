@@ -49,6 +49,7 @@ public class RedisRateLimiter extends AbstractRateLimiter<RedisRateLimiter.Confi
 
 	private ReactiveRedisTemplate<String, String> redisTemplate;
 	private RedisScript<List<Long>> script;
+
 	private AtomicBoolean initialized = new AtomicBoolean(false);
 	private Config defaultConfig;
 
@@ -136,6 +137,8 @@ public class RedisRateLimiter extends AbstractRateLimiter<RedisRateLimiter.Confi
 	@Override
 	@SuppressWarnings("unchecked")
 	public Mono<Response> isAllowed(String routeId, String id) {
+		//  id: 令牌桶编号。一个令牌桶编号对应令牌桶, 在本场景为请求限流键
+
 		if (!this.initialized.get()) {
 			throw new IllegalStateException("RedisRateLimiter is not initialized");
 		}
@@ -147,25 +150,45 @@ public class RedisRateLimiter extends AbstractRateLimiter<RedisRateLimiter.Confi
 		}
 
 		// How many requests per second do you want a user to be allowed to do?
+		// 令牌桶填充平均速率，单位/秒
 		int replenishRate = routeConfig.getReplenishRate();
 
 		// How much bursting do you want to allow?
+		// 令牌桶上限
 		int burstCapacity = routeConfig.getBurstCapacity();
 
 		try {
+
 			List<String> keys = getKeys(id);
 
-
 			// The arguments to the LUA script. time() returns unixtime in seconds.
+			/**
+			 *   第一个参数 ：replenishRate
+			 *   第二个参数 ：burstCapacity
+			 *   第三个参数 ：得到从 1970-01-01 00:00:00 开始的秒数。因为 Redis 的限制（
+			 *         Lua中有写操作不能使用带随机性质的读操作，如TIME ）不能在 Redis Lua中 使用 TIME 获取时间戳，
+			 *         因此只好从应用获取然后传入，在某些极端情况下（机器时钟不准的情况下），限流会存在一些小问题。
+			 *   第四个参数 ：消耗令牌数量，默认 1
+			 */
 			List<String> scriptArgs = Arrays.asList(replenishRate + "", burstCapacity + "",
 					Instant.now().getEpochSecond() + "", "1");
+
+
 			// allowed, tokens_left = redis.eval(SCRIPT, keys, args)
+			/**
+			 *     执行 Redis Lua 脚本，获取令牌。
+			 *          返回结果为 [是否获取令牌成功, 剩余令牌数] ，其中，1 代表获取令牌成功，0 代表令牌获取失败
+			 */
 			Flux<List<Long>> flux = this.redisTemplate.execute(this.script, keys, scriptArgs);
 			// .log("redisratelimiter", Level.FINER);
+
+
+			//  返回 Flux.just(Arrays.asList(1L, -1L)) ，即认为获取令牌成功。
 			return flux.onErrorResume(throwable -> Flux.just(Arrays.asList(1L, -1L)))
 					.reduce(new ArrayList<Long>(), (longs, l) -> {
 						longs.addAll(l);
 						return longs;
+
 					}).map(results -> {
 						boolean allowed = results.get(0) == 1L;
 						Long tokensLeft = results.get(1);
@@ -205,11 +228,18 @@ public class RedisRateLimiter extends AbstractRateLimiter<RedisRateLimiter.Confi
 		// this allows for using redis cluster
 
 		// Make a unique key per user.
+		     //获得令牌桶前缀，request_rate_limiter.${id}
 		String prefix = "request_rate_limiter.{" + id;
 
 		// You need two Redis keys for Token Bucket.
 		String tokenKey = prefix + "}.tokens";
 		String timestampKey = prefix + "}.timestamp";
+
+		/**
+		 *   获得令牌桶键数组 ：
+		 * request_rate_limiter.${id}.tokens ：令牌桶剩余令牌数。
+		 * request_rate_limiter.${id}.timestamp ：令牌桶最后填充令牌时间，单位：秒。
+		 */
 		return Arrays.asList(tokenKey, timestampKey);
 	}
 

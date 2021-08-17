@@ -29,9 +29,19 @@ import reactor.core.publisher.Mono;
 
 /**
  * @author Spencer Gibb
+ *
+ *  基于内存为存储器,
+ *  InMemoryRouteDefinitionRepository 来维护 RouteDefinition 信息，在网关实例重启或者崩溃后，RouteDefinition 就会丢失。
+ *
+ *  此时我们可以实现 RouteDefinitionRepository 接口，以实现例如 MySQLRouteDefinitionRepository 。
  */
+
 public class InMemoryRouteDefinitionRepository implements RouteDefinitionRepository {
 
+	/**
+	 * 路由配置映射
+	 * key ：路由编号 {@link RouteDefinition#id}
+	 */
 	private final Map<String, RouteDefinition> routes = synchronizedMap(new LinkedHashMap<String, RouteDefinition>());
 
 	@Override

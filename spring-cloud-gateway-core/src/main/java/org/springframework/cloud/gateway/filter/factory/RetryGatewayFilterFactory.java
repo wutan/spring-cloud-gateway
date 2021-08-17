@@ -55,9 +55,11 @@ public class RetryGatewayFilterFactory extends AbstractGatewayFilterFactory<Retr
 		retryConfig.validate();
 
 		Repeat<ServerWebExchange> statusCodeRepeat = null;
+
 		if (!retryConfig.getStatuses().isEmpty() || !retryConfig.getSeries().isEmpty()) {
 			Predicate<RepeatContext<ServerWebExchange>> repeatPredicate = context -> {
 				ServerWebExchange exchange = context.applicationContext();
+
 				if (exceedsMaxIterations(exchange, retryConfig)) {
 					return false;
 				}
@@ -68,12 +70,14 @@ public class RetryGatewayFilterFactory extends AbstractGatewayFilterFactory<Retr
 				boolean retryableStatusCode = retryConfig.getStatuses().contains(statusCode);
 
 				if (!retryableStatusCode && statusCode != null) { // null status code might mean a network exception?
+
 					// try the series
 					retryableStatusCode = retryConfig.getSeries().stream()
 							.anyMatch(series -> statusCode.series().equals(series));
 				}
 
 				boolean retryableMethod = retryConfig.getMethods().contains(httpMethod);
+
 				return retryableMethod && retryableStatusCode;
 			};
 

@@ -21,6 +21,9 @@ import reactor.core.publisher.Flux;
 
 /**
  * @author Spencer Gibb
+ *      负责读取路由配置( org.springframework.cloud.gateway.route.RouteDefinition )
+ *
+ *      路由定义定位器接口，定义获得路由定义数组的方法
  */
 public interface RouteDefinitionLocator {
 

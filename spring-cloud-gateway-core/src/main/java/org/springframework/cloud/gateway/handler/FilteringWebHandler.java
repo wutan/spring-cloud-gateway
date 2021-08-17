@@ -49,11 +49,15 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
 public class FilteringWebHandler implements WebHandler {
 	protected static final Log logger = LogFactory.getLog(FilteringWebHandler.class);
 
+	/***
+	 *  全局过滤器
+	 */
 	private final List<GatewayFilter> globalFilters;
 
 	public FilteringWebHandler(List<GlobalFilter> globalFilters) {
 		this.globalFilters = loadFilters(globalFilters);
 	}
+
 
 	private static List<GatewayFilter> loadFilters(List<GlobalFilter> filters) {
 		return filters.stream()
@@ -63,7 +67,9 @@ public class FilteringWebHandler implements WebHandler {
 						int order = ((Ordered) filter).getOrder();
 						return new OrderedGatewayFilter(gatewayFilter, order);
 					}
+
 					return gatewayFilter;
+
 				}).collect(Collectors.toList());
 	}
 
@@ -74,11 +80,16 @@ public class FilteringWebHandler implements WebHandler {
 
 	@Override
 	public Mono<Void> handle(ServerWebExchange exchange) {
+		//  获得Route
 		Route route = exchange.getRequiredAttribute(GATEWAY_ROUTE_ATTR);
+
+		//  获得GatewayFilter
 		List<GatewayFilter> gatewayFilters = route.getFilters();
 
 		List<GatewayFilter> combined = new ArrayList<>(this.globalFilters);
 		combined.addAll(gatewayFilters);
+
+		// 排序
 		//TODO: needed or cached?
 		AnnotationAwareOrderComparator.sort(combined);
 
@@ -115,6 +126,7 @@ public class FilteringWebHandler implements WebHandler {
 					GatewayFilter filter = filters.get(this.index);
 					DefaultGatewayFilterChain chain = new DefaultGatewayFilterChain(this, this.index + 1);
 					return filter.filter(exchange, chain);
+
 				} else {
 					return Mono.empty(); // complete
 				}
@@ -122,6 +134,7 @@ public class FilteringWebHandler implements WebHandler {
 		}
 	}
 
+	// **   执行 WebHandler 的处理器适配器
 	private static class GatewayFilterAdapter implements GatewayFilter {
 
 		private final GlobalFilter delegate;

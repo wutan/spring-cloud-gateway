@@ -29,6 +29,8 @@ import org.springframework.context.event.EventListener;
 
 /**
  * @author Spencer Gibb
+ *
+ * 已经被 CachingRouteLocator 取代
  */
 public class CachingRouteDefinitionLocator implements RouteDefinitionLocator {
 

@@ -52,9 +52,11 @@ public class PrefixPathGatewayFilterFactory extends AbstractGatewayFilterFactory
 		return (exchange, chain) -> {
 
 			boolean alreadyPrefixed = exchange.getAttributeOrDefault(GATEWAY_ALREADY_PREFIXED_ATTR, false);
+
 			if (alreadyPrefixed) {
 				return chain.filter(exchange);
 			}
+
 			exchange.getAttributes().put(GATEWAY_ALREADY_PREFIXED_ATTR, true);
 
 			ServerHttpRequest req = exchange.getRequest();

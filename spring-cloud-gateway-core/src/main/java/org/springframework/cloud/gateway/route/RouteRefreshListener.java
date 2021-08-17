@@ -31,8 +31,8 @@ import org.springframework.util.Assert;
 
 // see ZuulDiscoveryRefreshListener
 // TODO: make abstract class in commons?
-public class RouteRefreshListener
-		implements ApplicationListener<ApplicationEvent> {
+
+public class RouteRefreshListener implements ApplicationListener<ApplicationEvent> {
 
 	private HeartbeatMonitor monitor = new HeartbeatMonitor();
 	private final ApplicationEventPublisher publisher;
